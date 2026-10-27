@@ -1,0 +1,7 @@
+{
+  "name": "Citofonía Virtual - Sistema Residencial Inteligente",
+  "description": "Plataforma de comunicación en la nube para edificios y conjuntos residenciales. Reemplaza citófonos tradicionales con llamadas digitales al celular, control de acceso, paquetería, invitaciones QR y bitácora de portería.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
