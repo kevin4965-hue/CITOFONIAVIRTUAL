@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 import { ApartmentUnit, VisitorType, VisitorCall, DistressAlert, DistressType } from '../types/intercom';
 import { soundFx } from '../utils/audio';
-import { IMAGES } from '../data/mockData';
+import { IMAGES } from '../assets/images';
 import { SecurityAlerts } from './SecurityAlerts';
 
 interface PorteriaConsoleProps {
+  operatorName: string;
+  complexName: string;
   apartments: ApartmentUnit[];
   selectedUnit: ApartmentUnit;
   setSelectedUnit: (unit: ApartmentUnit) => void;
@@ -40,10 +42,12 @@ interface PorteriaConsoleProps {
   alerts: DistressAlert[];
   onResolveAlert: (alertId: string, notes?: string) => void;
   onDispatchGuard: (alertId: string) => void;
-  onTriggerTestDistress: (type: DistressType) => void;
+  onTriggerTestDistress?: (type: DistressType) => void;
 }
 
 export const PorteriaConsole: React.FC<PorteriaConsoleProps> = ({
+  operatorName,
+  complexName,
   apartments,
   selectedUnit,
   setSelectedUnit,
@@ -155,11 +159,9 @@ export const PorteriaConsole: React.FC<PorteriaConsoleProps> = ({
             )}
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-            <span>Operador: Guardia Juan Carlos M.</span>
+            <span>Operador: {operatorName}</span>
             <span>·</span>
-            <span>Edificio Los Nogales</span>
-            <span>·</span>
-            <span className="font-mono tabular-nums">Turno Diurno</span>
+            <span>{complexName}</span>
           </div>
         </div>
 

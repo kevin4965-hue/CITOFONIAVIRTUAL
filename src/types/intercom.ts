@@ -8,9 +8,11 @@ export interface ApartmentUnit {
   unitNumber: string;
   residentName: string;
   maskedPhone: string;
-  realPhone: string;
-  email: string;
-  status: 'al_dia' | 'moroso' | 'desocupado';
+  /** Sólo presente para administración y para el propio residente; nunca para portería. */
+  realPhone?: string;
+  email?: string;
+  /** Estado de cartera: sólo administración. */
+  status?: 'al_dia' | 'moroso' | 'desocupado';
   residentsCount: number;
   assignedParking: string;
   preferredChannel: 'App Móvil' | 'Llamada Celular GSM' | 'WhatsApp Bot';
@@ -33,6 +35,8 @@ export interface VisitorCall {
   notes?: string;
   dayOfWeek?: string;
   hour?: number;
+  /** Id del usuario (vigilante) que inició la llamada. */
+  createdBy?: string | null;
 }
 
 
@@ -46,7 +50,8 @@ export interface Parcel {
   arrivalTime: string;
   photoUrl: string;
   status: 'en_porteria' | 'entregado';
-  pickupPin: string;
+  /** Sólo lo recibe el residente destinatario. */
+  pickupPin?: string;
   pickupTime?: string;
   receiverSignature?: string;
 }
@@ -93,7 +98,8 @@ export interface DistressAlert {
   tower: string;
   unitNumber: string;
   residentName: string;
-  emergencyPhone: string;
+  /** Sólo se entrega a portería. */
+  emergencyPhone?: string;
   type: DistressType;
   timestamp: string;
   status: AlertResolutionStatus;

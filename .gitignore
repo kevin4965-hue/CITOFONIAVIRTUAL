@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Backend
+server.js
+data/
+*.db
+*.db-wal
+*.db-shm
