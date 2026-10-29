@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Package, Plus, CheckCircle, Clock, ShieldCheck, Camera, BellRing, Sparkles } from 'lucide-react';
 import { Parcel, ApartmentUnit } from '../types/intercom';
 import { soundFx } from '../utils/audio';
-import { IMAGES } from '../data/mockData';
 
 interface ParcelsManagementProps {
   parcels: Parcel[];
   apartments: ApartmentUnit[];
-  onAddParcel: (parcel: Parcel) => void;
-  onDeliverParcel: (parcelId: string, pinEntered: string) => boolean;
+  onAddParcel: (data: { unitId: string; courier: string; trackingCode: string }) => void | Promise<unknown>;
+  /** Devuelve null si se entregó, o el mensaje de error del servidor. */
+  onDeliverParcel: (parcelId: string, pinEntered: string) => Promise<string | null>;
 }
 
 export const ParcelsManagement: React.FC<ParcelsManagementProps> = ({
@@ -20,50 +20,37 @@ export const ParcelsManagement: React.FC<ParcelsManagementProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedUnitId, setSelectedUnitId] = useState(apartments[0]?.id || '');
   const [courier, setCourier] = useState('MercadoLibre Full');
-  const [trackingCode, setTrackingCode] = useState('ML-' + Math.floor(100000 + Math.random() * 900000));
+  const [trackingCode, setTrackingCode] = useState('');
   const [deliveryPinModal, setDeliveryPinModal] = useState<Parcel | null>(null);
   const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
 
   const pendingParcels = parcels.filter((p) => p.status === 'en_porteria');
   const deliveredParcels = parcels.filter((p) => p.status === 'entregado');
 
-  const handleRegisterParcel = (e: React.FormEvent) => {
+  const handleRegisterParcel = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetUnit = apartments.find((a) => a.id === selectedUnitId) || apartments[0];
-    const generatedPin = Math.floor(1000 + Math.random() * 9000).toString();
-
-    const newParcel: Parcel = {
-      id: 'par-' + Date.now(),
-      trackingCode: trackingCode || 'ENV-' + Math.floor(10000 + Math.random() * 90000),
-      tower: targetUnit.tower,
-      unitNumber: targetUnit.unitNumber,
-      recipientName: targetUnit.residentName,
-      courier,
-      arrivalTime: 'Hoy, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      photoUrl: IMAGES.parcelCounter,
-      status: 'en_porteria',
-      pickupPin: generatedPin,
-    };
-
-    onAddParcel(newParcel);
+    if (!targetUnit) return;
+    // El PIN de retiro lo genera el servidor y sólo lo recibe el residente.
+    await onAddParcel({ unitId: targetUnit.id, courier, trackingCode: trackingCode.trim() });
     soundFx.playChime();
     setShowAddModal(false);
-    setTrackingCode('ML-' + Math.floor(100000 + Math.random() * 900000));
+    setTrackingCode('');
   };
 
-  const handleConfirmDelivery = (e: React.FormEvent) => {
+  const handleConfirmDelivery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deliveryPinModal) return;
-    const success = onDeliverParcel(deliveryPinModal.id, pinInput);
-    if (success) {
+    const error = await onDeliverParcel(deliveryPinModal.id, pinInput);
+    if (error === null) {
       soundFx.playChime();
       setDeliveryPinModal(null);
       setPinInput('');
-      setPinError(false);
+      setPinError(null);
     } else {
       soundFx.playKeypadBeep(300);
-      setPinError(true);
+      setPinError(error);
     }
   };
 
@@ -180,7 +167,7 @@ export const ParcelsManagement: React.FC<ParcelsManagementProps> = ({
                     onClick={() => {
                       setDeliveryPinModal(p);
                       setPinInput('');
-                      setPinError(false);
+                      setPinError(null);
                     }}
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                   >
@@ -281,8 +268,9 @@ export const ParcelsManagement: React.FC<ParcelsManagementProps> = ({
                   type="text"
                   value={trackingCode}
                   onChange={(e) => setTrackingCode(e.target.value)}
+                  placeholder="Opcional: si lo dejas vacío se genera uno"
+                  maxLength={60}
                   className="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
-                  required
                 />
               </div>
 
@@ -336,7 +324,7 @@ export const ParcelsManagement: React.FC<ParcelsManagementProps> = ({
                 />
                 {pinError && (
                   <span className="text-[11px] text-rose-600 block mt-1">
-                    PIN incorrecto. El PIN generado es {deliveryPinModal.pickupPin}.
+                    {pinError}
                   </span>
                 )}
               </div>
