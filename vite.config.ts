@@ -12,6 +12,11 @@ export default defineConfig(() => {
       },
     },
     server: {
+      // En desarrollo el frontend (3000) reenvía la API y el WebSocket al servidor (3001).
+      proxy: {
+        '/api': 'http://localhost:3001',
+        '/ws': { target: 'ws://localhost:3001', ws: true },
+      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
